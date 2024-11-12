@@ -1,0 +1,17 @@
+[package]
+    name         = "stochastic_universal_sampling"
+    version      = "1.0.0"
+    edition      = "2021"
+    rust-version = "1.79"
+    description  = "The stochastic universal sampling algorithm for the rand crate."
+    categories   = ["algorithms"]
+    keywords     = ["random", "sampling"]
+    authors      = ["David McDougall <dam1784@rit.edu>"]
+    license      = "MIT-0"
+    repository   = "https://github.com/ctrl-z-9000-times/stochastic_universal_sampling.git"
+
+[lib]
+    doctest = false
+
+[dependencies]
+    rand = ">= 0.8"
