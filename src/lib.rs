@@ -36,8 +36,7 @@ where
             if num_samples >= weights.len() {
                 results.extend(0..weights.len());
             } else {
-                let samples = rand::seq::index::sample(rng, weights.len(), num_samples);
-                results.extend(samples);
+                results.extend(rand::seq::index::sample(rng, weights.len(), num_samples));
             }
         }
         results.shuffle(rng);
