@@ -1,6 +1,6 @@
 use rand::prelude::*;
 
-/// The Stochastic Universal Sampling Algorithm
+/// The stochastic universal sampling algorithm
 ///
 /// Chooses `amount` elements at random, with repetition, and in random order.
 /// The likelihood of each element’s inclusion in the output is specified by
@@ -29,18 +29,7 @@ where
     // Check for all zero weights.
     let total_weight = *weights.last().expect("Internal Error");
     if total_weight <= f64::EPSILON * weights.len() as f64 {
-        let mut results = vec![];
-        while results.len() < amount {
-            let num_samples = amount - results.len();
-            // If over-sampled then get uniform coverage of the inputs using non-random numbers.
-            if num_samples >= weights.len() {
-                results.extend(0..weights.len());
-            } else {
-                results.extend(rand::seq::index::sample(rng, weights.len(), num_samples));
-            }
-        }
-        results.shuffle(rng);
-        return results;
+        return choose_multiple(rng, amount, weights.len());
     }
     assert!(total_weight.is_finite());
     // Generate the random numbers to sample from the weights cumsum.
@@ -59,6 +48,34 @@ where
     // Shuffle the random sample to break up any runs of repeated elements.
     samples.shuffle(rng);
     samples
+}
+
+/// The stochastic universal sampling algorithm, with uniform weights
+///
+/// Chooses `amount` elements from the range `0..items` at random, with
+/// repetition, and in random order. All elements have an equal likelihood of
+/// being selected. This is equivalent to calling [choose_multiple_weighted()]
+/// with weights that are all equal.
+///
+/// Returns a vector of indices into the items range.
+pub fn choose_multiple<R>(rng: &mut R, amount: usize, items: usize) -> Vec<usize>
+where
+    R: Rng + ?Sized,
+{
+    assert!(amount == 0 || items > 0);
+    let mut results = Vec::with_capacity(amount);
+    while results.len() < amount {
+        let num_samples = amount - results.len();
+        // If over-sampling then get uniform coverage of the items using non-random numbers.
+        if num_samples >= items {
+            results.extend(0..items);
+        } else {
+            // Select the final elements using choose-without-replacement.
+            results.extend(rand::seq::index::sample(rng, items, num_samples));
+        }
+    }
+    results.shuffle(rng);
+    return results;
 }
 
 #[cfg(test)]
@@ -155,6 +172,24 @@ mod tests {
             assert!(a != b);
             assert_data_eq(&mut a, &mut b);
         }
+    }
+
+    #[test]
+    fn uniform_weights() {
+        let mut rng = rand::thread_rng();
+
+        let mut a = sus(&mut rng, 13, &[0.3; 13]);
+        let mut b = sus(&mut rng, 13, &[0.0; 13]);
+        let mut c = super::choose_multiple(&mut rng, 13, 13);
+        assert_data_eq(&mut a, &mut b);
+        assert_data_eq(&mut a, &mut c);
+
+        let mut x = super::choose_multiple(&mut rng, 1000, 1033);
+        let mut y = super::choose_multiple(&mut rng, 1000, 1033);
+
+        x.sort();
+        y.sort();
+        assert!(x != y);
     }
 
     #[test]
