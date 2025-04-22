@@ -1,5 +1,7 @@
 use rand::prelude::*;
 
+const NO_DATA: &'static str = "no data: can not choose from empty set";
+
 /// The stochastic universal sampling algorithm
 ///
 /// Chooses `amount` elements at random, with repetition, and in random order.
@@ -16,7 +18,7 @@ where
     if amount == 0 {
         return vec![];
     } else {
-        assert!(!weights.is_empty());
+        assert!(!weights.is_empty(), "{NO_DATA}");
     }
     // Apply a cumulative summation to the weights.
     let weights: Vec<_> = (0..weights.len())
@@ -62,7 +64,7 @@ pub fn choose_multiple<R>(rng: &mut R, amount: usize, items: usize) -> Vec<usize
 where
     R: Rng + ?Sized,
 {
-    assert!(amount == 0 || items > 0);
+    assert!(amount == 0 || items > 0, "{NO_DATA}");
     let mut results = Vec::with_capacity(amount);
     while results.len() < amount {
         let num_samples = amount - results.len();
